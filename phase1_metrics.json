@@ -1,0 +1,35 @@
+{
+  "nnarx": {
+    "model": "NNARX",
+    "params": 11417,
+    "flops_per_sample": 67920,
+    "train_time_s": 100.00771188735962,
+    "ensemble": 3,
+    "nrmse_sim": 0.8310007452964783,
+    "vaf_sim": 30.94378089904785
+  },
+  "rnn": {
+    "model": "RNN",
+    "params": 4353,
+    "flops_per_sample": 8513,
+    "train_time_s": 0.3796672821044922,
+    "nrmse_sim": 1.001708984375,
+    "vaf_sim": -0.3345012664794922
+  },
+  "lstm": {
+    "model": "LSTM",
+    "params": 17217,
+    "flops_per_sample": 33985,
+    "train_time_s": 0.4102346897125244,
+    "nrmse_sim": 0.9958263635635376,
+    "vaf_sim": 0.8357226848602295
+  },
+  "gru": {
+    "model": "GRU",
+    "params": 12929,
+    "flops_per_sample": 25473,
+    "train_time_s": 0.37481093406677246,
+    "nrmse_sim": 0.9926204085350037,
+    "vaf_sim": 1.4845550060272217
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(python --version 2>&1; where.exe python 2>&1)",
+      "PowerShell(& \"C:\\\\Users\\\\fabio\\\\AppData\\\\Local\\\\Python\\\\bin\\\\python.exe\" -c \"import torch; print\\('torch', torch.__version__\\); import numpy; print\\('numpy', numpy.__version__\\); print\\('cuda:', torch.cuda.is_available\\(\\)\\)\" 2>&1)",
+      "PowerShell(& \"C:\\\\Users\\\\fabio\\\\AppData\\\\Local\\\\Python\\\\bin\\\\python.exe\" \"C:\\\\Users\\\\fabio\\\\Documents\\\\Project_ML_CV\\\\patch_nb.py\")",
+      "PowerShell(& \"C:\\\\Users\\\\fabio\\\\AppData\\\\Local\\\\Python\\\\bin\\\\python.exe\" \"C:\\\\Users\\\\fabio\\\\Documents\\\\Project_ML_CV\\\\patch_nb.py\" 2>&1; echo \"verify:\"; & \"C:\\\\Users\\\\fabio\\\\AppData\\\\Local\\\\Python\\\\bin\\\\python.exe\" -c \"import json; nb=json.load\\(open\\(r'C:\\\\Users\\\\fabio\\\\Documents\\\\Project_ML_CV\\\\project-si-mlicv.ipynb'\\)\\); [print\\('OK' if 'narx_ensemble' in ''.join\\(c['source']\\) and 'curriculum advanced' in ''.join\\(c2['source']\\) else 'FAIL'\\) for c in nb['cells'] if c.get\\('id'\\)=='40de54cc' for c2 in nb['cells'] if c2.get\\('id'\\)=='8263515d-6ce5-4733-baec-645ddbf3cb59']\")"
+    ]
+  }
+}
