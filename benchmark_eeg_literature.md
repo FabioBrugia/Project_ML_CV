@@ -82,3 +82,5 @@ Benchmark website: https://www.nonlinearbenchmark.org/benchmarks/cortical-respon
 - Santos et al. 2023: "Decoding Electroencephalography Signal Response by Stacking Ensemble Learning and Adaptive Differential Evolution," Sensors 23(16):7049. PMID: 37631586
 - Gu et al. 2025: "Decoding the cortical responses to mechanical wrist perturbations: A two-step shared structure NARX method," Artif Intell Med, 2025
 - Bakels et al. 2025: "Accurate linear modeling of EEG-based cortical activity during a passive motor task with input," arXiv:2510.02596
+su
+
