@@ -57,6 +57,9 @@ Benchmark website: https://www.nonlinearbenchmark.org/benchmarks/cortical-respon
 
 ## Our Results (2026-05-06, full free-run simulation)
 
+> Table predates the plateau-curriculum + PolyNARMAX-OSA patch (2026-05-15). Re-run the notebook on the full LOSO loop to refresh; the post-patch PolyNARMAX row will gain an `OSA VAF` column.
+
+
 | Model | NRMSE | VAF | Params |
 |---|---|---|---|
 | NNARX (ensemble=3, dilated 0-64) | 0.858 | 26.4% | 5,785 |
@@ -69,11 +72,14 @@ Benchmark website: https://www.nonlinearbenchmark.org/benchmarks/cortical-respon
 
 ## Identified Improvement Priorities
 
-1. **Recurrent models broken**: need truncated BPTT (256-512 steps), teacher forcing + scheduled sampling, gradient clipping
-2. **NNARX tap structure**: literature uses dense nu=20 ny=5; our dilated taps skip important 0-20 range lags
-3. **Curriculum too aggressive**: k=1 phase too short (15 epochs), model not converged before jumping to k=5
-4. **PolyNARMAX divergent**: unstable poles in free-run, needs stability check/clipping
-5. **Need LOSO CV**: literature reports mean +/- std across all 10 subjects
+Status as of 2026-05-15 (post-commit `6eb7df3` + plateau-curriculum patch).
+
+1. **Recurrent models** -- `done`. Truncated BPTT (chunk = `rec_kstep_schedule` final stage, currently 256), teacher forcing with scheduled sampling via `rec_y_noise_std`, gradient clipping (`rec_grad_clip=1.0`) all wired in `train_seq` (cell 20). Free-run val NRMSE still ~0.99 -- model is well-conditioned but the recurrent family does not fit this signal at the tested capacities.
+2. **NNARX tap structure** -- `done`. `narx_u_taps = tuple(range(0, 20))`, `narx_y_taps = tuple(range(1, 6))` in `CFG` (cell 4) -- dense match to Gu 2021.
+3. **Curriculum convergence gate** -- `done`. `narx_kstep_advance = "plateau"` (and the recurrent twin `rec_kstep_advance`) advance to the next `k` only after `narx_kstep_min_epochs[stage]` have elapsed AND val sim NRMSE has plateaued for `narx_kstep_plateau_checks` consecutive checks (relative tol `narx_kstep_plateau_tol`). Fixed-epoch schedule is still available via `kstep_advance="fixed"` for back-compat.
+4. **PolyNARMAX stability** -- `done`. `run_poly_narmax` (cell 36) now reports both OSA (`steps_ahead=1`, comparable to Gu 2021 / Santos 2023 ~94 % VAF) and a divergence-guarded free-run (`steps_ahead=None`, per-sequence clipped at `diverge_factor=50 * std(y_seq)`). Result dict gains `nrmse_osa` / `vaf_osa` / `free_run_diverged` alongside the existing `nrmse_sim` / `vaf_sim` keys, so downstream Phase-3 tables are unchanged. `run_rnn` / `run_lstm` / `run_gru` likewise compute OSA via the existing `eval_seq` (teacher-forced) and emit the same `nrmse_osa` / `vaf_osa` fields, so RNN-family results are directly comparable to PolyNARMAX OSA and to Gu 2021.
+5. **LOSO CV** -- `done`. Outer loop iterates `loso_test_subject` across all `S` subjects, gated by `RUN_LOSO_CV` (cell 43); aggregated mean +/- std written to `results/loso_folds.json`.
+6. **3-step-ahead VAF** -- `done`. Literature reports 3-step VAF as a separate axis (Gu 2018 NARMAX-HNN 69.4 +/- 11.9 %, Santos 2023 JADE-STACK 67.5 +/- 7.4 %, Gu 2021 NARMAX 47-55 %). All six runners (`run_nnarx`, `run_nnarx_frols`, `run_rnn`, `run_lstm`, `run_gru`, `run_poly_narmax`) now also emit `nrmse_3step` / `vaf_3step` via `eval_3step_narx` (NNARX, cell 22) / `kstep_seq` (recurrent, cell 22) / `poly.predict(steps_ahead=3)` with the same divergence guard as free-run (PolyNARMAX). `k` defaults to 3; horizon-correct definition: condition on true `y` up to `t-k`, true `u` up to `t`, feed predictions back for the intermediate steps.
 
 ## Citing Papers (full references)
 
@@ -82,5 +88,4 @@ Benchmark website: https://www.nonlinearbenchmark.org/benchmarks/cortical-respon
 - Santos et al. 2023: "Decoding Electroencephalography Signal Response by Stacking Ensemble Learning and Adaptive Differential Evolution," Sensors 23(16):7049. PMID: 37631586
 - Gu et al. 2025: "Decoding the cortical responses to mechanical wrist perturbations: A two-step shared structure NARX method," Artif Intell Med, 2025
 - Bakels et al. 2025: "Accurate linear modeling of EEG-based cortical activity during a passive motor task with input," arXiv:2510.02596
-su
 
