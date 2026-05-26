@@ -29,7 +29,11 @@
       "Bash(python3 -c ' *)",
       "Bash(python3 *)",
       "Bash(.venv/bin/python *)",
-      "PowerShell(& \".venv\\\\Scripts\\\\jupyter.exe\" nbconvert --to script project-si-mlicv.ipynb --output project-si-mlicv-script 2>&1)"
+      "PowerShell(& \".venv\\\\Scripts\\\\jupyter.exe\" nbconvert --to script project-si-mlicv.ipynb --output project-si-mlicv-script 2>&1)",
+      "Bash(sed -n '300,330p' /tmp/notebook_code.txt)",
+      "Read(//private/tmp/**)",
+      "Bash(.venv/bin/jupyter nbconvert *)",
+      "Read(//tmp/**)"
     ]
   }
 }
