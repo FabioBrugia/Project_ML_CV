@@ -7,3 +7,15 @@ results/
 *.DS_Store
 Benchmark_EEG_medium
 Benchmark_EEG_small
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.brf
+*.out
+*.bbl
+*.blg
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
