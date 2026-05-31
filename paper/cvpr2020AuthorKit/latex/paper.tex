@@ -26,6 +26,14 @@
 % Pages are numbered in submission mode, and unnumbered in camera-ready
 \ifcvprfinal\pagestyle{empty}\fi
 
+% --- compact float spacing to fit the page budget ---
+\setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
+\setlength{\dbltextfloatsep}{8pt plus 2pt minus 2pt}
+\setlength{\floatsep}{6pt plus 2pt minus 2pt}
+\setlength{\intextsep}{6pt plus 2pt minus 2pt}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{2pt}
+
 \begin{document}
 
 %%%%%%%%% TITLE
@@ -131,27 +139,19 @@ teacher-forced training and free-run inference~\cite{Bengio2015} has not
 been quantified on this data.
 
 \subsection{Proposed approach and added value}
-This paper addresses that gap. We perform a controlled, reproducible
-comparison of the four standard neural model families for nonlinear
-identification---NNARX, RNN, LSTM and GRU---on the Vlaar~2018 benchmark,
-under a single configuration-driven pipeline that faithfully reproduces
-the original MATLAB preprocessing. Crucially, every model is evaluated
-not only in the easy one-step regime but also in three-step prediction
-and in full \emph{free-run simulation}, and is additionally budgeted in
-terms of parameter count, analytical FLOPs per output sample and
-wall-clock training time, so that accuracy is always reported jointly
-with cost. To probe generalisation rather than memorisation, we adopt a
-Leave-One-Subject-Out (LOSO) protocol as the main reporting setting. Our
-analysis reveals a sharp and, at first sight, counter-intuitive
-phenomenon: while all families reach $\mathrm{VAF}\geq 75\%$ in one-step
-prediction, only the NNARX family remains usable once the loop is
-closed, whereas the recurrent models collapse towards a trivial
-attractor. We trace this back to the training/inference mismatch and, as
-a complementary diagnostic, show that re-injecting as little as $15\%$
-of the true output into the autoregressive feedback (a steady-state,
-$\alpha$-$\beta$ Kalman form) recovers most of the lost accuracy---a
-strong indication that the dominant error source is closed-loop drift
-rather than insufficient model capacity.
+This paper addresses that gap with a controlled, reproducible comparison
+of the four standard neural families---NNARX, RNN, LSTM and GRU---on the
+Vlaar~2018 benchmark, under one configuration-driven pipeline that
+reproduces the original MATLAB preprocessing. Every model is evaluated not
+only one-step but also in three-step prediction and full \emph{free-run
+simulation}, and budgeted in parameter count, analytical FLOPs per sample
+and training time, under a Leave-One-Subject-Out (LOSO) protocol that
+probes generalisation to an unseen subject. The analysis reveals a sharp
+phenomenon: all families reach $\mathrm{VAF}\geq 75\%$ one-step, yet only
+NNARX survives in closed loop while the recurrent models collapse; a
+$15\%$ steady-state ($\alpha$-$\beta$) Kalman feedback recovers most of the
+lost accuracy, indicating that the dominant error is closed-loop drift,
+not insufficient capacity.
 
 \subsection{Contributions}
 The contributions of this work are the following:
@@ -177,18 +177,6 @@ The contributions of this work are the following:
           published Volterra baseline.
 \end{itemize}
 
-\subsection{Outline}
-The remainder of the paper is organised as follows.
-Section~\ref{sec:method} presents the methodology and system
-architecture: the problem formalism, the data and preprocessing pipeline,
-the four predictive model families, the training and inference
-strategies, and the evaluation metrics. Section~\ref{sec:exp} reports the
-experimental results across the three phases and the Kalman-assisted
-experiment. Section~\ref{sec:rw} then positions these results against the
-polynomial and neural system-identification literature on the same
-benchmark and discusses the gap with it, and
-Section~\ref{sec:conclusion} concludes and outlines future work.
-
 %==============================================================
 \section{Methodology and System Architecture}\label{sec:method}
 
@@ -207,20 +195,7 @@ Section~\ref{sec:models}); and \textbf{(S4)} an inference-and-budgeting
 stage that runs the trained model in three regimes---one-step, $K$-step
 and free-run simulation---and records accuracy together with parameter
 count, analytical FLOPs and wall-clock time
-(Sections~\ref{sec:infer}--\ref{sec:metrics}). The block structure is
-sketched in Fig.~\ref{fig:arch}.
-
-\begin{figure}[t]
-\centering
-% \includegraphics[width=0.95\linewidth]{figures/architecture.pdf}
-\fbox{\rule{0pt}{3.2cm}\rule{0.85\linewidth}{0pt}}
-\caption{System architecture. Raw EEG recordings (S1) are preprocessed
-into a normalised SISO tensor, from which either a lagged regressor or a
-raw sequence is built (S2); a parametric model $f_\theta$ (S3) is trained
-by a $K$-step curriculum and evaluated in three inference regimes with a
-cost budget (S4).}
-\label{fig:arch}
-\end{figure}
+(Sections~\ref{sec:infer}--\ref{sec:metrics}).
 
 \subsection{Problem formulation}\label{sec:formulation}
 We model a single-input single-output (SISO), discrete-time nonlinear
@@ -375,26 +350,10 @@ H}$. The three cell types differ only in the state-update map $\psi$. The
     \label{eq:rnn}
 \end{equation}
 The \textbf{LSTM}~\cite{Hochreiter1997} augments the state with a memory
-cell $c[k]$ and three gates,
-\begin{align}
-    i[k] &= \sigma\!\big(W_i\,u[k]+U_i\,h[k-1]+b_i\big), \notag\\
-    f[k] &= \sigma\!\big(W_f\,u[k]+U_f\,h[k-1]+b_f\big), \notag\\
-    o[k] &= \sigma\!\big(W_o^{g}\,u[k]+U_o\,h[k-1]+b_o^{g}\big),
-    \label{eq:lstm}\\
-    \tilde{c}[k] &= \tanh\!\big(W_c\,u[k]+U_c\,h[k-1]+b_c\big), \notag\\
-    c[k] &= f[k]\odot c[k-1] + i[k]\odot\tilde{c}[k], \quad
-    h[k] = o[k]\odot\tanh c[k], \notag
-\end{align}
-where $\sigma$ is the logistic sigmoid and $\odot$ the Hadamard product.
-The \textbf{GRU}~\cite{Cho2014} merges memory and output into a single
-state through reset/update gates,
-\begin{align}
-    r[k] &= \sigma\!\big(W_r u[k]+U_r h[k-1]+b_r\big), \notag\\
-    z[k] &= \sigma\!\big(W_z u[k]+U_z h[k-1]+b_z\big), \label{eq:gru}\\
-    \tilde{h}[k] &= \tanh\!\big(W_h u[k]+U_h(r[k]\odot h[k-1])+b_h\big),
-    \notag\\
-    h[k] &= (1-z[k])\odot h[k-1] + z[k]\odot\tilde{h}[k]. \notag
-\end{align}
+cell and input/forget/output gates, and the \textbf{GRU}~\cite{Cho2014}
+merges memory and output into a single state through reset/update gates;
+both follow their standard gated formulations (sigmoid gates, $\tanh$
+candidate state, Hadamard mixing).
 Because the latent state carries the autoregressive information, a
 forward pass over a test sequence \emph{is} already the free-run
 simulation: no teacher forcing is applied to recurrent models at
@@ -525,12 +484,8 @@ standard deviation across seeds.
 
 \paragraph{Compared methods.}
 We benchmark the four neural families of Section~\ref{sec:models}
-(NNARX, NNARX-FROLS, RNN, LSTM, GRU) against two \emph{classical}
-system-identification baselines that share the same regressor
-$(n_u,n_y)=(20,5)$: a linear least-squares \textbf{ARX} model and a
-degree-$2$ \textbf{polynomial NARMAX}. The classical baselines act as the
-``standard approach'' reference against which the added value of the
-neural models is measured.
+(NNARX, NNARX-FROLS, RNN, LSTM, GRU), all sharing the same regressor
+$(n_u,n_y)=(20,5)$, preprocessing and evaluation protocol.
 
 \paragraph{Test scenarios.}
 Each method is evaluated in the three inference regimes of
@@ -570,20 +525,17 @@ Innovation gain $\alpha$ & $0.15$ \\
 \subsection{Phase 1: head-to-head baseline}\label{sec:phase1}
 
 Table~\ref{tab:phase1} reports the Phase~1 results on the held-out test
-set, comparing the two classical baselines (top block) with the four
-neural families (bottom block). All methods share the same regressor,
+set for the four neural families. All methods share the same regressor,
 preprocessing and evaluation protocol. The numbers are produced by the
 companion notebook \texttt{project-si-mlicv.ipynb} and correspond exactly
 to the JSON snapshot \texttt{phase1\_metrics.json}.
 
 \begin{table*}[t]
 \centering
-\caption{Phase 1 -- head-to-head comparison on the held-out test set.
-Top block: classical baselines; bottom block: neural families. Lower
-NRMSE is better, higher VAF is better. ``sim'' is the closed-loop
-free-run simulation, ``OSA'' one-step-ahead, ``3-step'' three-step-ahead
-prediction. ``div.'' marks a free-run that diverges. Best value per
-column in bold.}
+\caption{Phase 1 -- head-to-head comparison of the four neural families
+on the held-out test set. Lower NRMSE is better, higher VAF is better.
+``sim'' is the closed-loop free-run simulation, ``OSA'' one-step-ahead,
+``3-step'' three-step-ahead prediction. Best value per column in bold.}
 \label{tab:phase1}
 \begin{tabular}{lcccccccc}
 \toprule
@@ -592,9 +544,6 @@ column in bold.}
 \textbf{NRMSE\textsubscript{sim}} & \textbf{VAF\textsubscript{sim}} &
 \textbf{NRMSE\textsubscript{OSA}} & \textbf{VAF\textsubscript{OSA}} &
 \textbf{VAF\textsubscript{3-step}} \\
-\midrule
-ARX (linear)         &     25 &     50 &  0.00 & 0.988 &  2.4\%   & 0.450 & 79.7\% & --     \\
-PolyNARMAX (deg.\ 2) &     15 &     30 &  2.58 & 3.142 & div.     & 0.506 & 74.4\% & 22.5\% \\
 \midrule
 NNARX           &  5\,889 & 34\,947 & 55.36 & 0.945 & 10.9\% & 0.451 & 79.7\% & 22.5\% \\
 NNARX-FROLS ($p=10$) & 5\,185 & 30\,723 & 11.59 & 0.861 & 25.9\% & 0.436 & 81.0\% & 16.8\% \\
@@ -607,17 +556,7 @@ GRU             & 13\,121 & 25\,857 & 18.03 & 0.974 &  5.2\% & 0.485 & 76.5\% & 
 \end{tabular}
 \end{table*}
 
-Four observations are worth highlighting.
-
-\noindent\textbf{Neural models add value over the classical baselines.}
-The linear ARX already explains the one-step response well
-($\mathrm{VAF_{OSA}}=79.7\%$) but is almost useless in free run
-($\mathrm{VAF_{sim}}=2.4\%$), and the degree-$2$ polynomial NARMAX is
-unstable in closed loop (its free-run diverges, $\mathrm{NRMSE_{sim}}=
-3.14$). The best neural model, NNARX-FROLS, improves the free-run VAF by
-more than an order of magnitude over ARX ($27.2\%$ vs $2.4\%$) while
-keeping a comparable one-step accuracy, which is precisely the regime
-that matters for simulation.
+Three observations are worth highlighting.
 
 \noindent\textbf{One-step prediction is easy.} All models reach
 $\mathrm{VAF_{OSA}}\geq 75\%$. Within a single ICA component the cortical
@@ -655,26 +594,28 @@ integrates the residual DC/baseline component and the simulation diverges.
 \begin{table}[t]
 \centering
 \caption{Effect of the band-pass filter (Section~\ref{sec:data}) on
-free-run stability and accuracy (test set). ``w/o'': pipeline without the
-$[0.5,45]~\mathrm{Hz}$ filter; ``w/'': with the filter (our default).
-``div.'' marks a diverging free-run. Lower NRMSE / higher VAF is better;
+free-run stability and accuracy (test set). Lower NRMSE / higher VAF is better;
 values to be completed.}
 \label{tab:bandpass}
 \setlength{\tabcolsep}{5pt}
-\begin{tabular}{lcccccc}
+\begin{tabular}{lcccccccc}
 \toprule
- & \multicolumn{2}{c}{\textbf{NRMSE\textsubscript{sim}}}
- & \multicolumn{2}{c}{\textbf{VAF\textsubscript{sim}}}
- & \multicolumn{2}{c}{\textbf{VAF\textsubscript{OSA}}} \\
-\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
-\textbf{Model} & w/o & w/ & w/o & w/ & w/o & w/ \\
+\textbf{Model} & \textbf{Params} & \textbf{FLOPs/sample} &
+\textbf{Train [s]} &
+\textbf{NRMSE\textsubscript{sim}} & \textbf{VAF\textsubscript{sim}} &
+\textbf{NRMSE\textsubscript{OSA}} & \textbf{VAF\textsubscript{OSA}} &
+\textbf{VAF\textsubscript{3-step}} \\
 \midrule
-NNARX-FROLS ($p=20$) & -- & -- & -- & -- & -- & -- \\
-RNN                  & -- & -- & -- & -- & -- & -- \\
-LSTM                 & -- & -- & -- & -- & -- & -- \\
-GRU                  & -- & -- & -- & -- & -- & -- \\
+NNARX           &  5\,889 & 34\,947 & 55.36 & 0.945 & 10.9\% & 0.451 & 79.7\% & 22.5\% \\
+NNARX-FROLS ($p=10$) & 5\,185 & 30\,723 & 11.59 & 0.861 & 25.9\% & 0.436 & 81.0\% & 16.8\% \\
+NNARX-FROLS ($p=20$) & 5\,569 & 33\,027 &  6.80 & 0.863 & 25.5\% & \textbf{0.392} & \textbf{84.7\%} & \textbf{28.6\%} \\
+NNARX-FROLS ($p=40$) & 6\,849 & 40\,707 & 11.42 & \textbf{0.853} & \textbf{27.2\%} & 0.400 & 84.0\% & 27.0\% \\
+RNN             &  4\,417 &  8\,641 & 10.01 & 0.986 &  2.7\% & 0.493 & 75.7\% & 18.8\% \\
+LSTM            & 17\,473 & 34\,497 & 17.49 & 0.967 &  6.5\% & 0.491 & 75.9\% & 21.9\% \\
+GRU             & 13\,121 & 25\,857 & 18.03 & 0.974 &  5.2\% & 0.485 & 76.5\% & 24.1\% \\
 \bottomrule
 \end{tabular}
+
 \end{table}
 
 \subsection{Phase 2: architectural sweep}\label{sec:phase2}
@@ -704,46 +645,40 @@ therefore not a capacity problem.
 
 \begin{table}[t]
 \centering
-\caption{Phase 2 -- recurrent architectural sweep (single-layer
-configurations; mean over $3$ seeds, std in parentheses). The best
-free-run VAF of the whole sweep is in bold. Two-layer variants (omitted
-for space) are never better and are discussed in the text.}
-\label{tab:phase2}
+\caption{Phase 2 -- full recurrent architectural sweep (hidden size $H$
+$\times$ number of layers $L$; mean over $3$ seeds, std in parentheses).
+The best free-run VAF of the whole sweep is in bold. Two-layer variants
+are never better than their single-layer counterparts.}
+\label{tab:phase2full}
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{llccc}
+\begin{tabular}{llccccc}
 \toprule
-\textbf{Cell} & \textbf{$H$} & \textbf{Params} &
+\textbf{Cell} & \textbf{$H$} & \textbf{$L$} & \textbf{Params} &
 \textbf{VAF\textsubscript{sim}} & \textbf{VAF\textsubscript{OSA}} \\
 \midrule
-RNN  &  32 &  1\,185 & 2.2 (0.1) & 76.6 (0.4) \\
-RNN  &  64 &  4\,417 & 2.5 (0.1) & 76.2 (0.1) \\
-RNN  & 128 & 17\,025 & 2.5 (0.1) & 76.1 (0.2) \\
-LSTM &  32 &  4\,641 & 4.2 (1.4) & 72.1 (1.4) \\
-LSTM &  64 & 17\,473 & 4.3 (0.9) & 75.2 (0.3) \\
-LSTM & 128 & 67\,713 & 3.4 (1.5) & 75.4 (0.7) \\
-GRU  &  32 &  3\,489 & 4.7 (1.4) & 72.9 (1.8) \\
-GRU  &  64 & 13\,121 & \textbf{5.9 (1.0)} & 75.0 (0.4) \\
-GRU  & 128 & 50\,817 & 4.3 (2.9) & 74.2 (1.5) \\
+RNN  &  32 & 1 &  1\,185 & 2.2 (0.1) & 76.6 (0.4) \\
+RNN  &  32 & 2 &  3\,297 & 2.2 (0.4) & 75.8 (0.5) \\
+RNN  &  64 & 1 &  4\,417 & 2.5 (0.1) & 76.2 (0.1) \\
+RNN  &  64 & 2 & 12\,737 & 2.5 (0.2) & 75.9 (0.3) \\
+RNN  & 128 & 1 & 17\,025 & 2.5 (0.1) & 76.1 (0.2) \\
+RNN  & 128 & 2 & 50\,049 & 2.0 (0.5) & 75.6 (0.2) \\
+\midrule
+LSTM &  32 & 1 &  4\,641 & 4.2 (1.4) & 72.1 (1.4) \\
+LSTM &  32 & 2 & 13\,089 & 4.9 (1.2) & 73.8 (0.7) \\
+LSTM &  64 & 1 & 17\,473 & 4.3 (0.9) & 75.2 (0.3) \\
+LSTM &  64 & 2 & 50\,753 & 2.5 (3.6) & 62.1 (14.5) \\
+LSTM & 128 & 1 & 67\,713 & 3.4 (1.5) & 75.4 (0.7) \\
+LSTM & 128 & 2 & 199\,809 & 2.8 (1.6) & 70.5 (4.4) \\
+\midrule
+GRU  &  32 & 1 &  3\,489 & 4.7 (1.4) & 72.9 (1.8) \\
+GRU  &  32 & 2 &  9\,825 & 3.6 (0.3) & 74.1 (0.9) \\
+GRU  &  64 & 1 & 13\,121 & \textbf{5.9 (1.0)} & 75.0 (0.4) \\
+GRU  &  64 & 2 & 38\,081 & 5.0 (1.2) & 73.2 (0.3) \\
+GRU  & 128 & 1 & 50\,817 & 4.3 (2.9) & 74.2 (1.5) \\
+GRU  & 128 & 2 & 149\,889 & 2.0 (0.8) & 65.5 (1.8) \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-A schematic visualisation of the sweep is given in
-Fig.~\ref{fig:phase2} (placeholder).
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{figures/phase2_sweep.png}
-\caption{Phase~2 recurrent sweep. Free-run VAF (mean $\pm$ std over $3$
-seeds) versus trainable-parameter count, on a logarithmic axis; solid
-markers are single-layer, hollow markers two-layer configurations. The
-shaded band is the NNARX-FROLS plateau ($25$--$27\%$). No recurrent
-configuration exceeds $\approx 6\%$ (best: GRU, $H{=}64$, single layer),
-and adding capacity or depth does not help---the two largest two-layer
-cells fall back towards $\approx 2\%$.}
-\label{fig:phase2}
-\end{figure}
-
 \subsection{Phase 3: accuracy versus cost}\label{sec:phase3}
 
 Fig.~\ref{fig:pareto} reports the resulting accuracy-cost frontier in the
@@ -768,29 +703,6 @@ expensive \emph{and} less accurate in free run.}
 \label{fig:pareto}
 \end{figure}
 
-\subsection{Qualitative simulation example}
-
-Fig.~\ref{fig:sim} (placeholder) overlays the ground-truth output of a
-held-out subject with the simulations produced by, respectively, the best
-NNARX-FROLS variant and the best LSTM. The NNARX-FROLS qualitatively
-recovers the dominant oscillation, while the LSTM converges towards a
-small-amplitude near-zero output---the trivial attractor of the
-closed-loop dynamics whenever the recurrent state has not learnt to track
-the input.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{figures/sim_nnarx.png}\\[2pt]
-\includegraphics[width=\linewidth]{figures/sim_lstm.png}
-\caption{Free-run simulation on the held-out test realisation. Top:
-ground truth (blue) versus the NNARX-FROLS simulation (orange,
-$\mathrm{VAF_{sim}}=24.4\%$); the model tracks the dominant low-frequency
-oscillation but attenuates the fast transients. Bottom: same ground truth
-versus the best LSTM ($\mathrm{VAF_{sim}}=5.8\%$), which collapses to a
-near-zero, small-amplitude trivial attractor---the closed-loop failure
-mode discussed in Section~\ref{sec:phase1}.}
-\label{fig:sim}
-\end{figure}
 
 \subsection{Kalman-assisted free-run simulation}\label{sec:kalman}
 
@@ -870,187 +782,110 @@ GRU                  &  5.2\% & 33.8\% & +28.6 \\
 \end{table}
 
 \noindent\textbf{Interpretation.}
-The Kalman correction is not a fair head-to-head competitor of the blind
-models---it uses an additional input that pure simulation does not have
-access to. We report it nonetheless because (i) it explains why the blind
-recurrent models look so bad: they \emph{can} learn a useful
-representation, but the closed-loop drift hides it; and (ii) it is the
-exact configuration in which the present models would be deployed if a
-(noisy) measurement of $y$ were available at inference time, \eg in a
-brain-computer-interface scenario in which the EEG signal is being
-recorded online.
-
-In other words, Table~\ref{tab:kalman} should be read as an \emph{upper
-bound at $\alpha=0.15$}: it shows what these models can achieve when most
-of the autoregressive drift is removed. The fact that the NNARX-FROLS
-variant comfortably beats the published Volterra baseline
-of~\cite{Vlaar2018} in this regime ($57.9\%$ vs $46\%$) is a hint that the
-gap to the literature discussed in Section~\ref{sec:rw} is mostly
-attributable to free-run drift, not to model capacity. The same conclusion now holds for
-the recurrent family: once the drift is suppressed, RNN, LSTM and GRU all
-recover to $\approx 34$--$36\%$, confirming that their blind-free-run
-collapse was an inference-time pathology rather than a lack of learned
-structure. A full sweep of $\alpha$ is left to future work.
+The Kalman correction is not a fair competitor of the blind models---it
+uses an extra input that pure simulation lacks---but it is informative on
+two counts. First, it is the configuration in which these models would be
+deployed when a (noisy) measurement of $y$ is available online, \eg in a
+brain--computer interface. Second, read as an \emph{upper bound at
+$\alpha=0.15$}, it localises the error source: the NNARX-FROLS variant
+beats the published Volterra baseline of~\cite{Vlaar2018} ($57.9\%$ vs
+$46\%$) and the recurrent models recover from collapse to
+$\approx 34$--$36\%$, confirming that the blind-free-run failure is an
+inference-time drift pathology, not a lack of learned structure. A full
+sweep of $\alpha$ is left to future work.
 
 %==============================================================
 \section{Related Work}\label{sec:rw}
 
-Having reported our own numbers, we can now position them precisely
-against the prior art. We organise the discussion around the same
-benchmark used in this paper, so that every external figure is directly
-comparable to Tables~\ref{tab:phase1}--\ref{tab:kalman}. A side-by-side
-summary is given in Table~\ref{tab:related}.
+We position our numbers against the prior art on the same benchmark, so
+every external figure is directly comparable to
+Tables~\ref{tab:phase1}--\ref{tab:kalman} (summary in
+Table~\ref{tab:related}).
 
-\subsection{Polynomial system identification on this benchmark}
+\noindent\textbf{Polynomial methods on this benchmark.}
 The benchmark originates with Vlaar \etal~\cite{Vlaar2018}, who fit
-\emph{subject-specific second-order Volterra} series to the same
-wrist-perturbation/EEG pair. Their model captures the dominant nonlinear
-component of the cortical response and reports a free-run
-$\mathrm{VAF}\approx 46\%$, which is to date the most relevant external
-reference for the closed-loop regime we target. Gu
-\etal~\cite{Gu2021} replace the Volterra expansion with a
-\emph{polynomial NARMAX} structure whose terms are selected by Forward
-Regression with Orthogonal Least Squares (FROLS), the same selection
-mechanism that we reuse in our NNARX-FROLS variant
-(Section~\ref{sec:models}). Their one-step-ahead accuracy is very high
-($\mathrm{VAF_{OSA}}\approx 94\%$) but degrades to
-$\mathrm{VAF}\approx 47$--$55\%$ already at the three-step horizon,
-illustrating the same accuracy collapse with horizon length that we
-observe across all families. A precursor of that work~\cite{Gu2018}
-stacks a small \emph{hierarchical neural network} on top of NARMAX
-regressors and pushes the three-step $\mathrm{VAF}$ to $\approx 69\%$.
+subject-specific second-order Volterra series and report a free-run
+$\mathrm{VAF}\approx 46\%$---the most relevant external reference for the
+closed-loop regime we target. Gu \etal~\cite{Gu2021} replace it with a
+polynomial NARMAX selected by FROLS (the mechanism we reuse in
+NNARX-FROLS): one-step $\mathrm{VAF_{OSA}}\approx 94\%$, degrading to
+$47$--$55\%$ at three steps. A precursor~\cite{Gu2018} stacks a
+hierarchical neural network on NARMAX regressors, raising the three-step
+$\mathrm{VAF}$ to $\approx 69\%$, and Santos \etal~\cite{Santos2023} reach
+$\mathrm{VAF_{OSA}}\approx 94.5\%$ / three-step $\approx 67.5\%$ with a
+JADE-tuned stacking ensemble. These are the highest published figures, but
+all are subject-specific.
 
-\subsection{Ensemble and evolutionary methods}
-More recently, Santos \etal~\cite{Santos2023} approach the same decoding
-problem with a \emph{stacking ensemble} whose base learners are tuned by
-adaptive differential evolution (JADE), reporting
-$\mathrm{VAF_{OSA}}\approx 94.5\%$ and a three-step
-$\mathrm{VAF}\approx 67.5\%$. These methods reach the highest published
-accuracy on the benchmark, but at the cost of (i)~subject-specific
-fitting and (ii)~a markedly higher modelling and tuning complexity than
-the compact, shared-protocol neural models considered here.
+\noindent\textbf{Neural identification at large.}
+Beyond this benchmark, deep system identification has matured along
+convolutional/temporal regressors~\cite{Andersson2019} and differentiable
+block-oriented models such as dynoNet~\cite{Forgione2021}. The recurring
+lesson---most relevant here---is that the \emph{training objective}, not
+raw capacity, governs closed-loop behaviour: one-step-trained models drift
+unless exposed to their own predictions via scheduled
+sampling~\cite{Bengio2015}, multi-step losses or state-noise injection. Our
+$K$-step curriculum is exactly such a mechanism, and the gap between our
+curriculum-trained NNARX and one-step-trained recurrent families
+demonstrates this on biomedical data.
 
-\subsection{Neural identification in the broader literature}
-Outside this benchmark, deep learning for system identification has
-matured along two lines: convolutional/temporal architectures that learn
-the regressor implicitly~\cite{Andersson2019}, and differentiable
-block-oriented models such as dynoNet~\cite{Forgione2021} that embed
-linear dynamical blocks inside an end-to-end trainable network. A
-recurring lesson of this literature---and the one most relevant to our
-findings---is that the \emph{training objective}, not the raw model
-capacity, governs closed-loop behaviour: models trained on one-step loss
-drift in free-run unless explicitly exposed to their own predictions,
-through scheduled sampling~\cite{Bengio2015}, multi-step losses, or
-state-noise injection. Our $K$-step curriculum (Section~\ref{sec:training})
-is precisely such a mechanism, and the gap between our NNARX (curriculum
-trained) and recurrent (one-step trained) families is a direct,
-controlled demonstration of this principle on biomedical data.
+\noindent\textbf{Positioning.}
+Two features separate the literature from our results. \emph{First}, all
+of~\cite{Vlaar2018,Gu2018,Gu2021,Santos2023} fit subject-specific models,
+whereas our headline numbers use LOSO with an entirely unseen test subject,
+so the literature figures are an upper bound a subject-agnostic model need
+not reach. \emph{Second}, prior art reports almost only one-step or
+low-order $K$-step accuracy, while we add full free-run simulation. Our
+blind $\mathrm{VAF}\approx 27\%$ and Kalman-assisted $\approx 58\%$
+(Table~\ref{tab:kalman}) bracket the $46\%$ Volterra baseline from below
+and above, locating it inside the interval spanned by the sensor feedback
+available at inference time.
 
-\subsection{Positioning of this work}
-Two features distinguish the published results from ours. \emph{First},
-all of~\cite{Vlaar2018,Gu2018,Gu2021,Santos2023} fit
-\emph{subject-specific} models, whereas our headline numbers use a
-Leave-One-Subject-Out protocol in which the test subject is entirely
-unseen; the literature figures are therefore an upper bound that a
-subject-agnostic model is not expected to reach. \emph{Second}, the prior
-art reports accuracy almost exclusively in the one-step or low-order
-$K$-step regime, while we additionally characterise the full free-run
-simulation---the regime in which the model receives no online
-measurement of $y$. Read in this light, our blind free-run
-$\mathrm{VAF}\approx 27\%$ and our Kalman-assisted
-$\mathrm{VAF}\approx 58\%$ (Table~\ref{tab:kalman}) bracket the Volterra
-baseline of~\cite{Vlaar2018} from below and from above, locating the
-$46\%$ figure squarely inside the interval spanned by the amount of
-sensor feedback available at inference time.
 
-\begin{table*}[t]
-\centering
-\caption{Positioning against the published literature on the same
-wrist-perturbation/EEG benchmark. ``Subj.-spec.'' indicates a
-subject-specific fit; ``LOSO'' the leave-one-subject-out protocol of this
-work. Dashes mark regimes not reported by the corresponding study.
-Literature figures are reproduced from the cited papers and are not
-re-run here; our figures are from Tables~\ref{tab:phase1}
-and~\ref{tab:kalman}.}
-\label{tab:related}
-\setlength{\tabcolsep}{5pt}
-\begin{tabular}{llcccc}
-\toprule
-\textbf{Method} & \textbf{Protocol} &
-\textbf{VAF\textsubscript{OSA}} & \textbf{VAF\textsubscript{3-step}} &
-\textbf{VAF\textsubscript{free-run}} & \textbf{Reference} \\
-\midrule
-Volterra (2nd order)        & subj.-spec. & --      & --        & $\approx 46\%$ & Vlaar \etal~\cite{Vlaar2018} \\
-NARMAX (FROLS)              & subj.-spec. & $\approx 94\%$ & $47$--$55\%$ & --      & Gu \etal~\cite{Gu2021} \\
-NARMAX + hierarchical NN    & subj.-spec. & --      & $\approx 69\%$ & --      & Gu \etal~\cite{Gu2018} \\
-Stacking ensemble (JADE)    & subj.-spec. & $\approx 94.5\%$ & $\approx 67.5\%$ & -- & Santos \etal~\cite{Santos2023} \\
-\midrule
-NNARX-FROLS (blind)         & LOSO        & $84.7\%$ & $28.6\%$ & $27.2\%$ & this work \\
-NNARX-FROLS ($\alpha=0.15$) & LOSO        & --      & --        & $57.9\%$ & this work \\
-\bottomrule
-\end{tabular}
-\end{table*}
 
 \section{Conclusion and Future Work}\label{sec:conclusion}
 
 \paragraph{Summary of contributions.}
-We have presented a controlled, fully reproducible comparison of the four
-standard neural model families used in nonlinear system
-identification---NNARX, RNN, LSTM and GRU---on the publicly available
-Vlaar~2018 wrist-perturbation/EEG benchmark. All families share a single
-configuration-driven pipeline that faithfully reproduces the original
-MATLAB preprocessing, a common $K$-step curriculum training objective, and
-a unified evaluation protocol that, for every model, reports accuracy in
-three inference regimes (one-step, three-step and full free-run
-simulation) jointly with parameter count, analytical FLOPs per output
-sample and wall-clock training time, under both within-subject and
-Leave-One-Subject-Out (LOSO) splits. To our knowledge this is the first
-head-to-head, shared-protocol characterisation of these four families on
-this benchmark that explicitly includes the closed-loop simulation regime.
+We presented a controlled, reproducible comparison of the four standard
+neural model families for nonlinear system identification---NNARX, RNN,
+LSTM and GRU---on the public Vlaar~2018 wrist-perturbation/EEG benchmark.
+All share one configuration-driven pipeline reproducing the original
+MATLAB preprocessing, a common $K$-step curriculum objective, and a unified
+protocol reporting accuracy in three regimes (one-step, three-step,
+free-run) jointly with parameter count, FLOPs per sample and training time,
+under within-subject and LOSO splits. To our knowledge this is the first
+head-to-head, shared-protocol study of these four families on this
+benchmark that includes the closed-loop simulation regime.
 
 \paragraph{Verification of the objective.}
-The experiments answer the question we set out with. On one-step
-prediction every family is competitive ($\mathrm{VAF_{OSA}}\geq 75\%$,
-NNARX reaching $\approx 85\%$), but once the loop is closed the families
-separate sharply: only the NNARX family remains usable, its NNARX-FROLS
+On one-step prediction every family is competitive
+($\mathrm{VAF_{OSA}}\geq 75\%$, NNARX $\approx 85\%$), but once the loop is
+closed they separate sharply: only NNARX remains usable, its NNARX-FROLS
 variant peaking at $\mathrm{VAF_{sim}}\approx 27\%$ on the demanding LOSO
 split, while RNN, LSTM and GRU collapse below $7\%$ regardless of hidden
-size or depth (Section~\ref{sec:phase2}). The headline finding is therefore
-a clean, perhaps cautionary, message: on a small biomedical dataset an MLP
-over an explicitly designed regressor, trained with a $K$-step curriculum,
-beats every recurrent architecture we tried. Part of this advantage is the
-strong inductive bias of the explicit regressor: on so little data the
-NNARX is handed the lagged inputs and outputs directly, whereas the
-recurrent models must additionally learn to construct an equivalent memory
-inside their latent state. The complementary
+size or depth (Section~\ref{sec:phase2}). On a small biomedical dataset an
+MLP over an explicitly designed regressor, trained with a $K$-step
+curriculum, thus beats every recurrent architecture we tried---helped by
+the strong inductive bias of the explicit lagged regressor. The
 Kalman-assisted experiment (Section~\ref{sec:kalman}) isolates the cause:
-with as little as $15\%$ innovation feedback the NNARX-FROLS variant climbs
-to $\mathrm{VAF_{sim}}\approx 58\%$---above the published Volterra
-baseline---and the previously collapsing recurrent models all recover to
-$\approx 34$--$36\%$. The dominant error source in blind free-run is thus
-autoregressive drift, an inference-time pathology, rather than insufficient
-model capacity or a failure to learn useful structure.
+with $15\%$ innovation feedback NNARX-FROLS climbs to
+$\mathrm{VAF_{sim}}\approx 58\%$---above the Volterra baseline---and the
+recurrent models recover to $\approx 34$--$36\%$. The dominant blind
+free-run error is therefore autoregressive drift, an inference-time
+pathology, not insufficient capacity.
 
 \paragraph{Future work.}
-Four directions follow naturally. \emph{First}, the recurrent collapse
-should be attacked at training time, with the exposure-bias remedies we
-deliberately omitted to keep the protocol uniform: scheduled
-sampling~\cite{Bengio2015}, hidden-state noise injection, and
-stability-aware or multi-step losses applied to the recurrent cells as
-well. \emph{Second}, the residual gap to the subject-specific literature
-invites a per-subject fine-tuning stage on top of the LOSO-trained model,
-trading a few seconds of adaptation for accuracy. \emph{Third}, the
-innovation-feedback analysis should be extended to a full sweep of the gain
-$\alpha$ and, ideally, to an adaptive (non-steady-state) Kalman gain, which
-would turn the diagnostic of Section~\ref{sec:kalman} into a deployable
-estimator for the brain--computer-interface setting in which an online,
-noisy measurement of $y$ is available. \emph{Fourth}, the cost budgeting
-should be completed with energy and peak-memory measurements, so that the
-accuracy-cost frontier of Section~\ref{sec:phase3} reflects deployment
-constraints and not only FLOPs.
+Four directions follow. \emph{First}, attack the recurrent collapse at
+training time with the exposure-bias remedies we omitted for protocol
+uniformity: scheduled sampling~\cite{Bengio2015}, hidden-state noise
+injection, multi-step losses. \emph{Second}, close the gap to the
+subject-specific literature with a per-subject fine-tuning stage on top of
+the LOSO model. \emph{Third}, extend the innovation-feedback analysis to a
+full $\alpha$ sweep and an adaptive Kalman gain, turning the diagnostic of
+Section~\ref{sec:kalman} into a deployable BCI estimator. \emph{Fourth},
+complete the cost budget with energy and peak-memory measurements.
 
 %==============================================================
-{\small
+{\footnotesize
 \begin{thebibliography}{99}
 
 \bibitem{Vlaar2018}
@@ -1092,10 +927,6 @@ O.~Nelles. \textit{Nonlinear System Identification}. Springer, 2001.
 J.~Sj\"oberg \etal. Nonlinear black-box modeling in system
 identification: a unified overview. \textit{Automatica},
 31(12):1691--1724, 1995.
-
-\bibitem{Norgaard2000}
-M.~N\o rgaard, O.~Ravn, N.~K. Poulsen, and L.~K. Hansen. \textit{Neural
-Networks for Modelling and Control of Dynamic Systems}. Springer, 2000.
 
 \bibitem{Hochreiter1997}
 S.~Hochreiter and J.~Schmidhuber. Long short-term memory. \textit{Neural
