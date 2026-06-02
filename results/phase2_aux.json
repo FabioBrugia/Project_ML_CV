@@ -1,0 +1,58 @@
+[
+  {
+    "model": "NNARX-FROLS",
+    "params": 5850,
+    "flops_per_sample": 11570,
+    "train_time_s": 11.705394983291626,
+    "ensemble": 1,
+    "nrmse_sim": 0.8813684582710266,
+    "vaf_sim": 22.353893280029297,
+    "nrmse_osa": 0.4043937027454376,
+    "vaf_osa": 83.64657592773438,
+    "nrmse_3step": 0.8799879550933838,
+    "vaf_3step": 22.571170806884766,
+    "spec_lambda": 0.0
+  },
+  {
+    "model": "NNARX-FROLS",
+    "params": 5850,
+    "flops_per_sample": 11570,
+    "train_time_s": 2.8161489963531494,
+    "ensemble": 1,
+    "nrmse_sim": 0.8619284629821777,
+    "vaf_sim": 25.947839736938477,
+    "nrmse_osa": 0.39205580949783325,
+    "vaf_osa": 84.63330841064453,
+    "nrmse_3step": 0.8310939073562622,
+    "vaf_3step": 30.99237632751465,
+    "spec_lambda": 0.05
+  },
+  {
+    "model": "NNARX-FROLS",
+    "params": 5850,
+    "flops_per_sample": 11570,
+    "train_time_s": 2.8639349937438965,
+    "ensemble": 1,
+    "nrmse_sim": 0.8619284629821777,
+    "vaf_sim": 25.947839736938477,
+    "nrmse_osa": 0.39205580949783325,
+    "vaf_osa": 84.63330841064453,
+    "nrmse_3step": 0.8310939073562622,
+    "vaf_3step": 30.99237632751465,
+    "spec_lambda": 0.1
+  },
+  {
+    "model": "NNARX-FROLS",
+    "params": 5850,
+    "flops_per_sample": 11570,
+    "train_time_s": 2.8074870109558105,
+    "ensemble": 1,
+    "nrmse_sim": 0.8619284629821777,
+    "vaf_sim": 25.947839736938477,
+    "nrmse_osa": 0.39205580949783325,
+    "vaf_osa": 84.63330841064453,
+    "nrmse_3step": 0.8310939073562622,
+    "vaf_3step": 30.99237632751465,
+    "spec_lambda": 0.2
+  }
+]

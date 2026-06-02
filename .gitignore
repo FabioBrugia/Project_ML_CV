@@ -4,6 +4,7 @@ __pycache__/
 .ipynb_checkpoints/
 results/
 !results/.gitkeep
+results_kalman/
 *.DS_Store
 Benchmark_EEG_medium
 Benchmark_EEG_small

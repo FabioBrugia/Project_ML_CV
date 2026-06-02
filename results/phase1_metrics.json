@@ -1,0 +1,90 @@
+{
+  "nnarx": {
+    "model": "NNARX (FROLS K=20)",
+    "params": 5569,
+    "flops_per_sample": 33027,
+    "train_time_s": 7.86371922492981,
+    "ensemble": 3,
+    "nrmse_sim": 0.8630781173706055,
+    "vaf_sim": 25.511878967285156,
+    "nrmse_osa": 0.3916463255882263,
+    "vaf_osa": 84.66243743896484,
+    "nrmse_3step": 0.8450268507003784,
+    "vaf_3step": 28.60466766357422
+  },
+  "nnarx_frols_k10": {
+    "model": "NNARX-FROLS",
+    "params": 5185,
+    "flops_per_sample": 30723,
+    "train_time_s": 12.217164039611816,
+    "ensemble": 3,
+    "nrmse_sim": 0.8607020974159241,
+    "vaf_sim": 25.937206268310547,
+    "nrmse_osa": 0.4364888370037079,
+    "vaf_osa": 80.96159362792969,
+    "nrmse_3step": 0.9133750796318054,
+    "vaf_3step": 16.760337829589844
+  },
+  "nnarx_frols_k40": {
+    "model": "NNARX-FROLS",
+    "params": 6849,
+    "flops_per_sample": 40707,
+    "train_time_s": 12.027395248413086,
+    "ensemble": 3,
+    "nrmse_sim": 0.8534786105155945,
+    "vaf_sim": 27.158695220947266,
+    "nrmse_osa": 0.40021973848342896,
+    "vaf_osa": 83.9826431274414,
+    "nrmse_3step": 0.854586660861969,
+    "vaf_3step": 26.968597412109375
+  },
+  "nnarx_handcrafted": {
+    "model": "NNARX (hand-crafted)",
+    "params": 5889,
+    "flops_per_sample": 34947,
+    "train_time_s": 50.100465059280396,
+    "ensemble": 3,
+    "nrmse_sim": 0.9445242285728455,
+    "vaf_sim": 10.854804992675781,
+    "nrmse_osa": 0.45070981979370117,
+    "vaf_osa": 79.68985748291016,
+    "nrmse_3step": 0.8802103400230408,
+    "vaf_3step": 22.523571014404297
+  },
+  "rnn": {
+    "model": "RNN",
+    "params": 4417,
+    "flops_per_sample": 8641,
+    "train_time_s": 9.166899919509888,
+    "nrmse_sim": 0.983948290348053,
+    "vaf_sim": 3.230661153793335,
+    "nrmse_osa": 0.49111294746398926,
+    "vaf_osa": 75.88116455078125,
+    "nrmse_3step": 0.9007472395896912,
+    "vaf_3step": 18.865615844726562
+  },
+  "lstm": {
+    "model": "LSTM",
+    "params": 17473,
+    "flops_per_sample": 34497,
+    "train_time_s": 16.15875220298767,
+    "nrmse_sim": 0.9709199070930481,
+    "vaf_sim": 6.280559539794922,
+    "nrmse_osa": 0.5106514096260071,
+    "vaf_osa": 73.92791748046875,
+    "nrmse_3step": 0.8957602381706238,
+    "vaf_3step": 19.830917358398438
+  },
+  "gru": {
+    "model": "GRU",
+    "params": 13121,
+    "flops_per_sample": 25857,
+    "train_time_s": 14.885580062866211,
+    "nrmse_sim": 0.9836000800132751,
+    "vaf_sim": 3.26421856880188,
+    "nrmse_osa": 0.5034838914871216,
+    "vaf_osa": 74.65570831298828,
+    "nrmse_3step": 0.9002973437309265,
+    "vaf_3step": 19.091278076171875
+  }
+}
