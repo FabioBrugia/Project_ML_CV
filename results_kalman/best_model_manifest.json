@@ -1,0 +1,29 @@
+{
+  "metric": "nrmse_sim",
+  "mode": "min",
+  "best_key": "nnarx",
+  "best_model": "NNARX (FROLS K=20)",
+  "best_score": 0.5320255756378174,
+  "ranking": [
+    {
+      "key": "nnarx",
+      "model": "NNARX (FROLS K=20)",
+      "nrmse_sim": 0.5320255756378174
+    },
+    {
+      "key": "lstm",
+      "model": "LSTM",
+      "nrmse_sim": 0.7604979872703552
+    },
+    {
+      "key": "rnn",
+      "model": "RNN",
+      "nrmse_sim": 0.7737597227096558
+    },
+    {
+      "key": "gru",
+      "model": "GRU",
+      "nrmse_sim": 0.7807526588439941
+    }
+  ]
+}
