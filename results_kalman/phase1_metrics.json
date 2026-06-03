@@ -1,0 +1,77 @@
+{
+  "nnarx": {
+    "model": "NNARX (FROLS K=20)",
+    "params": 5569,
+    "flops_per_sample": 33027,
+    "train_time_s": 17.840618133544922,
+    "ensemble": 3,
+    "nrmse_sim": 0.5152528285980225,
+    "vaf_sim": 73.46984100341797,
+    "nrmse_osa": 0.13272002339363098,
+    "vaf_osa": 98.2387924194336,
+    "nrmse_3step": 0.6277706027030945,
+    "vaf_3step": 60.60438919067383
+  },
+  "nnarx_frols_k10": {
+    "model": "NNARX-FROLS",
+    "params": 5185,
+    "flops_per_sample": 30723,
+    "train_time_s": 26.607163667678833,
+    "ensemble": 3,
+    "nrmse_sim": 0.5739495158195496,
+    "vaf_sim": 67.0584945678711,
+    "nrmse_osa": 0.139594167470932,
+    "vaf_osa": 98.05200958251953,
+    "nrmse_3step": 0.6238902807235718,
+    "vaf_3step": 61.089111328125
+  },
+  "nnarx_frols_k40": {
+    "model": "NNARX-FROLS",
+    "params": 6593,
+    "flops_per_sample": 39171,
+    "train_time_s": 17.29395055770874,
+    "ensemble": 3,
+    "nrmse_sim": 0.5282374024391174,
+    "vaf_sim": 72.0968017578125,
+    "nrmse_osa": 0.14042893052101135,
+    "vaf_osa": 98.02884674072266,
+    "nrmse_3step": 0.6330742239952087,
+    "vaf_3step": 59.94105529785156
+  },
+  "rnn": {
+    "model": "RNN",
+    "params": 4417,
+    "flops_per_sample": 8641,
+    "train_time_s": 10.269244909286499,
+    "nrmse_sim": 0.7768551707267761,
+    "vaf_sim": 39.664398193359375,
+    "nrmse_osa": 0.34080156683921814,
+    "vaf_osa": 88.38792419433594,
+    "nrmse_3step": 0.8622109889984131,
+    "vaf_3step": 25.695823669433594
+  },
+  "lstm": {
+    "model": "LSTM",
+    "params": 17473,
+    "flops_per_sample": 34497,
+    "train_time_s": 17.069892168045044,
+    "nrmse_sim": 0.7666242122650146,
+    "vaf_sim": 41.231475830078125,
+    "nrmse_osa": 0.37907156348228455,
+    "vaf_osa": 85.63978576660156,
+    "nrmse_3step": 0.8320428729057312,
+    "vaf_3step": 30.79962158203125
+  },
+  "gru": {
+    "model": "GRU",
+    "params": 13121,
+    "flops_per_sample": 25857,
+    "train_time_s": 16.079363107681274,
+    "nrmse_sim": 0.7740015387535095,
+    "vaf_sim": 40.43952178955078,
+    "nrmse_osa": 0.3833795487880707,
+    "vaf_osa": 85.34700012207031,
+    "nrmse_3step": 0.8385702967643738,
+    "vaf_3step": 29.86106300354004
+  }
+}
